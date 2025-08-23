@@ -9,10 +9,9 @@ ROOT_DIR = os.path.abspath(
 sys.path.insert(0, ROOT_DIR)
 
 
-
 from repository.mongo import KeyframeRepository
 from repository.milvus import KeyframeVectorRepository
-from service import KeyframeQueryService, ModelService
+from service import KeyframeQueryService, ModelService, TranslationService
 from models.keyframe import Keyframe
 import open_clip
 from pymilvus import connections, Collection as MilvusCollection
@@ -28,6 +27,7 @@ class ServiceFactory:
         milvus_password: str ,
         milvus_search_params: dict,
         model_name: str ,
+        pretrained: str,
         milvus_db_name: str = "default",
         milvus_alias: str = "default",
         mongo_collection=Keyframe,
@@ -44,8 +44,8 @@ class ServiceFactory:
             alias=milvus_alias
         )
 
-        self._model_service = self._init_model_service(model_name)
-
+        self._model_service = self._init_model_service(model_name, pretrained)
+        self._translate_service = TranslationService()
         self._keyframe_query_service = KeyframeQueryService(
             keyframe_mongo_repo=self._mongo_keyframe_repo,
             keyframe_vector_repo=self._milvus_keyframe_repo
@@ -80,8 +80,8 @@ class ServiceFactory:
 
         return KeyframeVectorRepository(collection=collection, search_params=search_params)
 
-    def _init_model_service(self, model_name: str):
-        model, _, preprocess = open_clip.create_model_and_transforms(model_name)
+    def _init_model_service(self, model_name: str, pretrained: str):
+        model, _, preprocess = open_clip.create_model_and_transforms(model_name, pretrained=pretrained, force_quick_gelu=True)
         tokenizer = open_clip.get_tokenizer(model_name)
         return ModelService(model=model, preprocess=preprocess, tokenizer=tokenizer)
 
@@ -96,3 +96,6 @@ class ServiceFactory:
 
     def get_keyframe_query_service(self):
         return self._keyframe_query_service
+    
+    def get_translate_service(self):
+        return self._translate_service

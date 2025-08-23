@@ -41,7 +41,7 @@ cd aio-aic
 ```bash
 pip install uv
 uv init --python=3.10
-uv add aiofiles beanie dotenv fastapi[standard] httpx ipykernel motor nicegui numpy open-clip-torch pydantic-settings pymilvus streamlit torch typing-extensions usearch uvicorn
+uv add aiofiles beanie dotenv fastapi[standard] httpx ipykernel motor nicegui numpy open-clip-torch pydantic-settings pymilvus streamlit torch typing-extensions usearch uvicorn dotenv
 ```
 
 3. Activate .venv

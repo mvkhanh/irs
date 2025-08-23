@@ -1,15 +1,7 @@
-from typing import TypeVar, Any, Generic, Type, List, Optional
-from abc import ABC, abstractmethod
+from typing import TypeVar, Any, Generic, Type
+from abc import ABC
 from beanie import Document 
-import torch
-import numpy as np
-from pydantic import BaseModel, Field
-from pymilvus import connections
 from pymilvus import Collection as MilvusCollection
-
-
-
-
 
 BeanieDocument = TypeVar('BeanieDocument', bound=Document)
 class MongoBaseRepository(Generic[BeanieDocument]):
@@ -38,10 +30,6 @@ class MongoBaseRepository(Generic[BeanieDocument]):
         return await self.collection.find_all().to_list(length=None)
 
 
-
-
-
-
 class MilvusBaseRepository(ABC):
     
     def __init__(
@@ -50,11 +38,4 @@ class MilvusBaseRepository(ABC):
     ):
         
         self.collection = collection
-
-
-
-
-    
-        
-
 

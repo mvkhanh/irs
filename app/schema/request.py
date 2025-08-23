@@ -1,18 +1,31 @@
-from pydantic import BaseModel, Field
-from typing import List, Optional
+from pydantic import BaseModel, Field, field_validator
+from typing import List, Optional, Literal
 
+CmpOp = Literal["eq", "neq", "gt", "gte", "lt", "lte"]
+
+class ObjFilter(BaseModel):
+    name: str
+    cmp: CmpOp
+    count: int
 
 class BaseSearchRequest(BaseModel):
     """Base search request with common parameters"""
-    query: str = Field(..., description="Search query text", min_length=1, max_length=1000)
-    top_k: int = Field(default=10, ge=1, le=500, description="Number of top results to return")
-    score_threshold: float = Field(default=0.0, ge=0.0, le=1.0, description="Minimum confidence score threshold")
+    size: int = Field(default=100, ge=1, le=500, description="Number of top results to return")
+    page: int = Field(default=1, description='Page number')
 
 
 class TextSearchRequest(BaseSearchRequest):
     """Simple text search request"""
-    pass
-
+    prev: str | None = Field(default=None, description="Prev query for temporal search", min_length=1, max_length=1000)
+    query: str | None = Field(default=None, description="Search query text", min_length=1, max_length=1000)
+    next: str | None = Field(default=None, description="Next query for temporal search", min_length=1, max_length=1000)
+    ocr: str | None = Field(default=None, description="OCR search", min_length=1, max_length=1000)
+    obj_filters: str | None = Field(default=None, description="Object filters")
+    oversample: int = Field(default=10, description='Oversample for reranking')
+        
+class ImageSearchRequest(BaseSearchRequest):
+    imgid: int
+    
 
 class TextSearchWithExcludeGroupsRequest(BaseSearchRequest):
     """Text search request with group exclusion"""

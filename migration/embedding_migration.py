@@ -84,7 +84,8 @@ class MilvusEmbeddingInjector:
         batch_size: int = 10000,
     ):
         print(f"Loading embeddings from {embedding_file_path}")
-        embeddings = torch.load(embedding_file_path, weights_only=False)
+        device = 'mps' if torch.backends.mps.is_available() else 'cuda' if torch.cuda.is_available() else 'cpu'
+        embeddings = torch.load(embedding_file_path, weights_only=False, map_location=device)
         
         if isinstance(embeddings, torch.Tensor):
             embeddings = embeddings.cpu().numpy()

@@ -26,10 +26,10 @@ class KeyFrameIndexMilvusSetting(BaseSettings):
     SEARCH_PARAMS: dict = {}
     
 class AppSettings(BaseSettings):
-    DATA_FOLDER: str  = "/media/tinhanhnguyen/Data3/Projects/HCMAI2025_Baseline/data/keyframe"
-    ID2INDEX_PATH: str = "/media/tinhanhnguyen/Data3/Projects/HCMAI2025_Baseline/data/id2index.json"
-    MODEL_NAME: str = "hf-hub:laion/CLIP-convnext_xxlarge-laion2B-s34B-b82K-augreg-soup"
-    FRAME2OBJECT: str = '/media/tinhanhnguyen/Data3/Projects/HCMAI2025_Baseline/app/data/detections.json'
-    ASR_PATH: str = '/media/tinhanhnguyen/Data3/Projects/HCMAI2025_Baseline/app/data/asr_proc.json'
-
-
+    DATA_FOLDER: str
+    ID2INDEX_PATH: str
+    MODEL_NAME: str
+    PRETRAINED: str
+    OBJECT_CLASSES_PATH: str
+    # FRAME2OBJECT: str = '/media/tinhanhnguyen/Data3/Projects/HCMAI2025_Baseline/app/data/detections.json'
+    # ASR_PATH: str

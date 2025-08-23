@@ -16,7 +16,7 @@ sys.path.insert(0, ROOT_DIR)
 
 
 from controller.query_controller import QueryController
-from service import ModelService, KeyframeQueryService
+from service import ModelService, KeyframeQueryService, TranslationService
 from core.settings import KeyFrameIndexMilvusSetting, MongoDBSettings, AppSettings
 from factory.factory import ServiceFactory
 from core.logger import SimpleLogger
@@ -97,8 +97,6 @@ def get_agent_controller(
     )
 
 
-
-
 def get_model_service(service_factory: ServiceFactory = Depends(get_service_factory)) -> ModelService:
     try:
         model_service = service_factory.get_model_service()
@@ -135,7 +133,22 @@ def get_keyframe_service(service_factory: ServiceFactory = Depends(get_service_f
             detail=f"Keyframe service initialization failed: {str(e)}"
         )
 
-
+def get_translate_service(service_factory: ServiceFactory = Depends(get_service_factory)) -> TranslationService:
+    try:
+        translate_service = service_factory.get_translate_service()
+        if translate_service is None:
+            logger.error("Translate service not available from factory")
+            raise HTTPException(
+                status_code=503,
+                detail="Translate service not available"
+            )
+        return translate_service
+    except Exception as e:
+        logger.error(f"Failed to get translate service: {str(e)}")
+        raise HTTPException(
+            status_code=503,
+            detail=f"Translate service initialization failed: {str(e)}"
+        )
 
 def get_mongo_client(request: Request):
     """Get MongoDB client from app state"""
@@ -159,7 +172,6 @@ async def check_mongodb_health(request: Request) -> bool:
         return False
 
 
-
 def get_milvus_repository(service_factory: ServiceFactory = Depends(get_service_factory)):
     """Get Milvus repository from ServiceFactory"""
     try:
@@ -181,6 +193,7 @@ def get_milvus_repository(service_factory: ServiceFactory = Depends(get_service_
 def get_query_controller(
     model_service: ModelService = Depends(get_model_service),
     keyframe_service: KeyframeQueryService = Depends(get_keyframe_service),
+    translate_service: TranslationService = Depends(get_translate_service),
     app_settings: AppSettings = Depends(get_app_settings)
 ) -> QueryController:
     """Get query controller instance"""
@@ -189,7 +202,7 @@ def get_query_controller(
         
         data_folder = Path(app_settings.DATA_FOLDER)
         id2index_path = Path(app_settings.ID2INDEX_PATH)
-        
+        object_classes_path = Path(app_settings.OBJECT_CLASSES_PATH)
         if not data_folder.exists():
             logger.warning(f"Data folder does not exist: {data_folder}")
             data_folder.mkdir(parents=True, exist_ok=True)
@@ -203,8 +216,10 @@ def get_query_controller(
         controller = QueryController(
             data_folder=data_folder,
             id2index_path=id2index_path,
+            object_classes_path=object_classes_path,
             model_service=model_service,
-            keyframe_service=keyframe_service
+            keyframe_service=keyframe_service,
+            translate_service=translate_service,
         )
         
         logger.info("Query controller created successfully")
