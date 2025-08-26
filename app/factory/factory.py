@@ -28,6 +28,7 @@ class ServiceFactory:
         milvus_search_params: dict,
         model_name: str ,
         pretrained: str,
+        data_folder: str,
         milvus_db_name: str = "default",
         milvus_alias: str = "default",
         mongo_collection=Keyframe,
@@ -48,7 +49,8 @@ class ServiceFactory:
         self._translate_service = TranslationService()
         self._keyframe_query_service = KeyframeQueryService(
             keyframe_mongo_repo=self._mongo_keyframe_repo,
-            keyframe_vector_repo=self._milvus_keyframe_repo
+            keyframe_vector_repo=self._milvus_keyframe_repo,
+            data_folder=data_folder
         )
 
     def _init_milvus_repo(

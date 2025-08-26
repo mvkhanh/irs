@@ -30,8 +30,6 @@ logger = SimpleLogger(__name__)
 from dotenv import load_dotenv
 load_dotenv()
 
-
-
 @lru_cache
 def get_llm() -> LLM:
     return GoogleGenAI(
@@ -39,27 +37,20 @@ def get_llm() -> LLM:
         api_key=os.getenv('GOOGLE_GENAI_API')
     )
 
-
-
-
 @lru_cache()
 def get_app_settings():
     """Get MongoDB settings (cached)"""
     return AppSettings()
-
 
 @lru_cache()
 def get_milvus_settings():
     """Get Milvus settings (cached)"""
     return KeyFrameIndexMilvusSetting()
 
-
 @lru_cache()
 def get_mongo_settings():
     """Get MongoDB settings (cached)"""
     return MongoDBSettings()
-
-
 
 def get_service_factory(request: Request) -> ServiceFactory:
     """Get ServiceFactory from app state"""
@@ -71,8 +62,6 @@ def get_service_factory(request: Request) -> ServiceFactory:
             detail="Service factory not initialized. Please check application startup."
         )
     return service_factory
-
-
 
 def get_agent_controller(
     service_factory = Depends(get_service_factory),
@@ -96,7 +85,6 @@ def get_agent_controller(
         top_k=50
     )
 
-
 def get_model_service(service_factory: ServiceFactory = Depends(get_service_factory)) -> ModelService:
     try:
         model_service = service_factory.get_model_service()
@@ -114,7 +102,6 @@ def get_model_service(service_factory: ServiceFactory = Depends(get_service_fact
             detail=f"Model service initialization failed: {str(e)}"
         )
     
-
 def get_keyframe_service(service_factory: ServiceFactory = Depends(get_service_factory)) -> KeyframeQueryService:
     """Get keyframe query service from ServiceFactory"""
     try:
@@ -200,22 +187,9 @@ def get_query_controller(
     try:
         logger.info("Creating query controller...")
         
-        data_folder = Path(app_settings.DATA_FOLDER)
-        id2index_path = Path(app_settings.ID2INDEX_PATH)
         object_classes_path = Path(app_settings.OBJECT_CLASSES_PATH)
-        if not data_folder.exists():
-            logger.warning(f"Data folder does not exist: {data_folder}")
-            data_folder.mkdir(parents=True, exist_ok=True)
-            
-        if not id2index_path.exists():
-            logger.warning(f"ID2Index file does not exist: {id2index_path}")
-            id2index_path.parent.mkdir(parents=True, exist_ok=True)
-            with open(id2index_path, 'w') as f:
-                json.dump({}, f)
         
         controller = QueryController(
-            data_folder=data_folder,
-            id2index_path=id2index_path,
             object_classes_path=object_classes_path,
             model_service=model_service,
             keyframe_service=keyframe_service,

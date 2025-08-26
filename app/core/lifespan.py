@@ -17,6 +17,7 @@ sys.path.insert(0, ROOT_DIR)
 
 from core.settings import MongoDBSettings, KeyFrameIndexMilvusSetting, AppSettings
 from models.keyframe import Keyframe
+from models.speech_caption import SpeechCaption
 from factory.factory import ServiceFactory
 from core.logger import SimpleLogger
 
@@ -50,7 +51,7 @@ async def lifespan(app: FastAPI):
         database = mongo_client[mongo_settings.MONGO_DB]
         await init_beanie(
             database=database,
-            document_models=[Keyframe]
+            document_models=[Keyframe, SpeechCaption]
         )
         logger.info("Beanie initialized successfully")
         
@@ -70,6 +71,7 @@ async def lifespan(app: FastAPI):
             model_name=appsetting.MODEL_NAME,
             pretrained=appsetting.PRETRAINED,
             mongo_collection=Keyframe,
+            data_folder=appsetting.DATA_FOLDER
         )
         logger.info("Service factory initialized successfully")
         

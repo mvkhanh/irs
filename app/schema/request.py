@@ -1,5 +1,6 @@
 from pydantic import BaseModel, Field, field_validator
 from typing import List, Optional, Literal
+from pydantic_core import PydanticUndefined  # <-- thêm dòng này
 
 CmpOp = Literal["eq", "neq", "gt", "gte", "lt", "lte"]
 
@@ -12,38 +13,61 @@ class BaseSearchRequest(BaseModel):
     """Base search request with common parameters"""
     size: int = Field(default=100, ge=1, le=500, description="Number of top results to return")
     page: int = Field(default=1, description='Page number')
-
-
-class TextSearchRequest(BaseSearchRequest):
-    """Simple text search request"""
-    prev: str | None = Field(default=None, description="Prev query for temporal search", min_length=1, max_length=1000)
-    query: str | None = Field(default=None, description="Search query text", min_length=1, max_length=1000)
-    next: str | None = Field(default=None, description="Next query for temporal search", min_length=1, max_length=1000)
-    ocr: str | None = Field(default=None, description="OCR search", min_length=1, max_length=1000)
-    obj_filters: str | None = Field(default=None, description="Object filters")
-    oversample: int = Field(default=10, description='Oversample for reranking')
-        
+   
 class ImageSearchRequest(BaseSearchRequest):
     imgid: int
     
+class UnifiedSearchRequest(BaseSearchRequest):
+    # vector text
+    query: str | None = Field(None, min_length=1, max_length=1000)
 
-class TextSearchWithExcludeGroupsRequest(BaseSearchRequest):
-    """Text search request with group exclusion"""
-    exclude_groups: List[int] = Field(
-        default_factory=list,
-        description="List of group IDs to exclude from search results",
-    )
+    # full-text search trên Mongo (ASR/OCR)
+    asr: str | None = None
+    ocr: str | None = None
 
+    # object filters
+    obj_filters: Optional[List[ObjFilter]] = None
+    exclude_ids: Optional[List[int]] = None
 
-class TextSearchWithSelectedGroupsAndVideosRequest(BaseSearchRequest):
-    """Text search request with specific group and video selection"""
-    include_groups: List[int] = Field(
-        default_factory=list,
-        description="List of group IDs to include in search results",
-    )
-    include_videos: List[int] = Field(
-        default_factory=list,
-        description="List of video IDs to include in search results",
-    )
+    group_nums: Optional[List[int]] = None
+    video_nums: Optional[List[int]] = None
 
+    # oversample + trọng số trộn
+    oversample: int = 10
+    w_vec: float = 1.0     # weight vector ANN
+    w_asr: float = 1.0     # weight FTS ASR
+    w_ocr: float = 0.5     # weight FTS OCR
 
+    # Cho phép nhận obj_filters từ query ?obj_filters=a:gte:2,b:eq:1
+    @field_validator("obj_filters", mode="before")
+    @classmethod
+    def parse_obj_filters(cls, v):
+        if v is None or v is PydanticUndefined:
+            return []
+        # Đã là list[dict]/list[ObjFilter]
+        if isinstance(v, list):
+            if not v or isinstance(v[0], (dict, ObjFilter)):
+                return v
+        # Hỗ trợ list[str] hoặc str "a:gte:2,b:eq:1"
+        toks: list[str] = []
+        if isinstance(v, (list, tuple)):
+            for s in v:
+                toks += [t for t in str(s).split(",") if t.strip()]
+        else:
+            toks = [t for t in str(v).split(",") if t.strip()]
+        out: list[dict] = []
+        for t in toks:
+            parts = t.split(":", 2)
+            if len(parts) != 3:
+                raise ValueError(f"Invalid '{t}', expected name:cmp:count")
+            name, cmp_, cnt = parts
+            out.append({"name": name, "cmp": cmp_.lower(), "count": int(cnt)})
+        return out
+
+    @field_validator("exclude_ids", "group_nums", "video_nums", mode="before")
+    @classmethod
+    def ensure_list_defaults(cls, v):
+        # None / missing -> []
+        if v is None or v is PydanticUndefined:
+            return []
+        return v

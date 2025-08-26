@@ -16,6 +16,6 @@ class SpeechCaption(Document):
         
         indexes = [
             IndexModel([("text", TEXT)], name="fts_text", default_language="none"),
-            # IndexModel([("video_id", ASCENDING), ("start", ASCENDING), ("end", ASCENDING)],
-            #            name="video_time"),
+            IndexModel([("group_num", ASCENDING), ("video_num", ASCENDING), ("start", ASCENDING), ("end", ASCENDING)],
+                       name="video_time"),
         ]

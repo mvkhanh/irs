@@ -54,7 +54,6 @@ class KeyframeVectorRepository(MilvusBaseRepository):
                 result = MilvusSearchResult(
                     id_=hit.id,
                     distance=hit.distance,
-                    # embedding=hit.entity.get("embedding") if hasattr(hit, 'entity') else None
                 )
                 results.append(result)
         
@@ -63,13 +62,13 @@ class KeyframeVectorRepository(MilvusBaseRepository):
             total_found=len(results),
         )
     
-    def get_all_id(self) -> list[int]:
-        return list(range(self.collection.num_entities))
+    def get_total(self):
+        return self.collection.num_entities
     
     async def search_by_img_id(
         self,
-        search_request: ImageSearchRequest
-        # exclude_ids: Optional[list[int]] = None,
+        search_request: ImageSearchRequest,
+        exclude_ids: Optional[list[int]] = None,
     ):
         """
         Tìm hàng xóm của ảnh có id = imgid bằng chính embedding của nó.
@@ -89,25 +88,22 @@ class KeyframeVectorRepository(MilvusBaseRepository):
         query_emb = q[0]["embedding"]
 
         # 2) Xây expr loại chính nó + các id cần exclude (nếu có)
-        # excludes = set(exclude_ids or [])
-        # excludes.add(imgid)
-        # expr_parts = []
-        # if excludes:
-        #     expr_parts.append(f"id not in {list(excludes)}")
-        # expr = " and ".join(expr_parts) if expr_parts else None
+        excludes = set(exclude_ids or [])
+        excludes.add(search_request.imgid)
+        expr_parts = []
+        if excludes:
+            expr_parts.append(f"id not in {list(excludes)}")
+        expr = " and ".join(expr_parts) if expr_parts else None
 
-        # 3) Milvus search chưa có offset ổn định ở mọi version ⇒
-        #    lấy top_n = skip + size rồi tự cắt trang client-side
         skip = (search_request.page - 1) * search_request.size
-
-        # 4) Thực hiện search
         self.search_params['offset'] = skip
+        
         search_res = self.collection.search(
             data=[query_emb],
             anns_field="embedding",
             param=self.search_params,  
             limit=search_request.size,
-            # expr=expr,
+            expr=expr,
             output_fields=["id"],        # không cần lấy embedding khi duyệt hàng xóm
             _async=False
         )
@@ -118,7 +114,6 @@ class KeyframeVectorRepository(MilvusBaseRepository):
                 result = MilvusSearchResult(
                     id_=hit.id,
                     distance=hit.distance,
-                    # embedding=hit.entity.get("embedding") if hasattr(hit, 'entity') else None
                 )
                 results.append(result)
         return MilvusSearchResponse(
