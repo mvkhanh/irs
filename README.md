@@ -1,4 +1,4 @@
-# Video retreival system
+# Video retrieval system
 
 A FastAPI-based AI application powered by Milvus for vector search, MongoDB for metadata storage, and MinIO for object storage. It supports text-embedding search, OCR, ASR, object-based filtering, image search, group/video ID lookup, and multi-modal query combinations.
 
