@@ -1,6 +1,6 @@
-# HCMAI2025
+# Video retreival system
 
-A FastAPI-based AI application powered by Milvus for vector search, MongoDB for metadata storage, and MinIO for object storage.
+A FastAPI-based AI application powered by Milvus for vector search, MongoDB for metadata storage, and MinIO for object storage. It supports text-embedding search, OCR, ASR, object-based filtering, image search, group/video ID lookup, and multi-modal query combinations.
 
 ## 🧑‍💻 Getting Started
 
@@ -10,17 +10,11 @@ A FastAPI-based AI application powered by Milvus for vector search, MongoDB for 
 - Python 3.10
 - uv
 
-### Download the dataset
-1. [Metadata](https://drive.google.com/drive/folders/1vghRbevk8KtosbTIJeHyXr3KoojZxh2Z?usp=sharing), follow the guide.ipynb and example data folder in here.
-2. [Keyframes](https://docs.google.com/spreadsheets/d/1PGE28vdyZVfOBW85PqwY3rcYZVGXEI_wL4a8Ci-c4Gk/edit?gid=0#gid=0), just the keyframes and objects batch 1 for testing.
-
-
-
 ### 🔧 Local Development
 1. Clone the repo and start all services:
 ```bash
-git clone https://github.com/yourusername/aio-aic.git
-cd aio-aic
+git clone https://github.com/mvkhanh/irs.git
+cd irs
 ```
 
 2. Install uv and setup env
@@ -51,5 +45,3 @@ python migration/keyframe_migration.py --file_path <clip_idmap.json file path> -
 cd app
 python main.py
 ```
-
-(http://localhost:8000/keyframe/)
